@@ -1,0 +1,103 @@
+[4,5,6,7]
+let item = 0
+basic.forever(() => {
+    basic.clearScreen()
+    item = 3
+    led.setBrightness(56)
+    for (let i = 0; i < 4; i++) {
+        basic.pause(1000)
+        item += 1
+        basic.showNumber(item)
+    }
+})
+
+[!] - ha van előtte 'space' akkor végigfut
+input.onGesture(Gesture.Shake, () => {
+    while (input.buttonIsPressed(Button.B)) {
+        basic.showString("!")
+    }
+})
+input.onButtonPressed(Button.A, () => {
+    basic.clearScreen()
+})
+
+[vízmérték]
+basic.forever(() => {
+    while (input.buttonIsPressed(Button.A)) {
+        basic.showNumber(input.rotation(Rotation.Roll))
+    }
+    while (input.buttonIsPressed(Button.B)) {
+        basic.showNumber(input.rotation(Rotation.Pitch))
+    }
+})
+
+[szabadesés]
+input.onGesture(Gesture.FreeFall, () => {
+    basic.showNumber(input.acceleration(Dimension.Z))
+})
+
+[karakterek összeadása]
+basic.forever(() => {
+    basic.clearScreen()
+    basic.showString("Uff" + "!")
+    basic.showIcon(IconNames.Heart)
+    basic.pause(2000)
+})
+
+[rádiózás]
+radio.onDataPacketReceived(({receivedString}) => {
+    basic.showString(receivedString)
+    basic.pause(1000)
+    basic.clearScreen()
+})
+input.onButtonPressed(Button.B, () => {
+    radio.setGroup(54)
+    radio.sendString("UfF_!")
+})
+radio.setGroup(54)
+
+[soros port - rádió kommunikáció]
+let item = ""
+basic.forever(() => {
+    item = serial.readString()
+    basic.showString(item)
+    radio.sendString(item)
+    serial.writeString(item)
+})
+radio.onDataPacketReceived(({receivedString}) => {
+    basic.showString(receivedString)
+    serial.writeString(receivedString)
+})
+radio.setGroup(66)
+
+[binárisból decimális]
+let number = 0
+let power = 0
+let n_length = 0
+let length = 0
+let item = ""
+radio.onDataPacketReceived(({receivedString}) => {
+    basic.showString(receivedString)
+    serial.writeString(receivedString)
+})
+basic.forever(() => {
+    if (input.buttonIsPressed(Button.A)) {
+        item = serial.readString()
+        basic.showString(item)
+        radio.sendString(item)
+        serial.writeLine(" ")
+        serial.writeString(item)
+        serial.writeString("-->")
+        length = item.length
+        n_length = length - 1
+        power = 0
+        for (let index = 0; index <= length; index++) {
+            number = parseInt(item.charAt(index)) * Math.pow(2, n_length)
+            power = power + number
+            n_length = n_length - 1
+        }
+        basic.showNumber(power)
+        serial.writeNumber(power)
+    }
+})
+radio.setGroup(66)
