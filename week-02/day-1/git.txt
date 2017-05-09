@@ -1,0 +1,56 @@
+http://www.letix.hu/
+
+**Terminal parancsok
+pwd - elérési út (megmutat)
+cd (., ..) - léptetés könyvtárak között
+touch - fájl létrehozása
+mkdir - könyvtárt létrehoz
+cp - fájl és könyvtár másolása (adott helyen másik névvel, vagy másik helyre elérési úttal)
+mv - áthelyezés
+rm - törlés
+sort - rendezés
+uniq - kiszûri a duplikálást
+grep - adott fájlon belül adott szóra keres és kiemeli (-v -> ez pedig inverzeli)
+
+
+git init
+ls (listázás)
+ls -a (mindent listáz)
+cat (fájlnév [fájl tartalmat listáz])
+git mv (fájl régi név fájl új név [átnevezi])
+git status (-s)
+git add (* fájl) git add .
+git rm (unstage)
+git diff (HEAD [különbség az uccsó commit és az aktuális munka között])
+--cached [ha az egész múltra kiv. az ember]
+--stat (rövid sum, +- jelek, bármelyik elõzõ után illeszthetõ)
+(fájl elérési útvonallal a végén, 1 fájlra korlátozható)
+git config --global user.name ('Your Name'), user.email (you@somedomain.com)
+git commit -m ('vmilyen kommenttel' - ez fontos, "szabály", legyen beszédes, max 50 char)
+git commit -a (ez automatikusan végrehajt egy 'add'-ot commit elõtt)
+git reset HEAD (-- [elérési út] ez visszaállít adott fájlon (un-stage))
+git reset --soft HEAD~ (az utolsó commit parancs visszavonása, semmi más)
+git rm --cached ((-- fájl) olyan mint ha visszavonnád az 'add' parancsot) 
+u.a. mint a sima HEAD reset
+git rm -f ((-- fájl) törli az adott fájlt a könyvtárból (is))
+git stash (átirányítja a HEAD-et erre az állapotra, elvileg olyan mint egy verem)
+
+git branch (megmutatja mid van - alapból 'master')
+git branch (branchname [létrehoz egy új branch-et])
+git checkout (branchname [átvált adott branch-re])
+git branch -v (megmutat minden commit-ot az összes branch-en)
+git checkout -b (vmi név [létrehoz egy új branch-et és vált is rá])
+git branch -d (branchname [töröl egy branch-et])
+git merge (létezõ branch név [egybeolvaszt egy választott branch-et az aktuálissal])
+#merge conflict esetén a 'git diff' segít a feltérképezésben, majd mikor orvosoltuk a problémát,
+#add majd commit parancsokkal véglegesítünk
+git push [alias] [branch]
+
+git log
+git remote add origin https://github.com/*
+git push -u origin master #(origin a neve a main-nek, az -u megjegyezteti, késõbb már nem kell)
+git stash (biztibe helyez vmit)
+
+
+#Clone
+git clone (git://github.com/schacon/simplegit.git - pl.)
