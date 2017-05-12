@@ -17,14 +17,7 @@ int main() {
     }
     else if (a % 5 == 0)
     {
-        if (a % 3 == 0)
-        {
-            printf("FizzBuzz\n");
-        }
-        else
-        {
-            printf("Buzz\n");
-        }
+        printf("Buzz\n");
     }
     else
     {

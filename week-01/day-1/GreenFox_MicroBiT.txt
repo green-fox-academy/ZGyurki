@@ -101,3 +101,35 @@ basic.forever(() => {
     }
 })
 radio.setGroup(66)
+
+[UTOLSÓ]
+let number = 0
+let power = 0
+let n_length = 0
+let length = 0
+let item = ""
+radio.onDataPacketReceived(({receivedString}) => {
+    basic.showString(receivedString)
+    serial.writeString(receivedString)
+})
+basic.forever(() => {
+    if (input.buttonIsPressed(Button.A)) {
+        item = serial.readString()
+        basic.showString(item)
+        radio.sendString(item)
+        serial.writeLine(" ")
+        serial.writeString(item)
+        serial.writeString("-->")
+        length = item.length
+        n_length = length - 1
+        power = 0
+        for (let index = 0; index <= length; index++) {
+            number = parseInt(item.charAt(index)) * Math.pow(2, n_length)
+            power = power + number
+            n_length = n_length - 1
+        }
+        basic.showNumber(power)
+        serial.writeNumber(power)
+    }
+})
+radio.setGroup(66)
