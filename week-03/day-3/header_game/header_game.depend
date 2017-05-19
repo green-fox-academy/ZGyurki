@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1495021744 source:c:\users\lenovo\desktop\zöldróka\gfoxx\zgyurki\header_game\main.c
+	<stdio.h>
+	"gaming_with_header.h"
+	"gaming_with_header.c"
+
+1495020925 c:\users\lenovo\desktop\zöldróka\gfoxx\zgyurki\header_game\gaming_with_header.h
+
+1495022209 c:\users\lenovo\desktop\zöldróka\gfoxx\zgyurki\header_game\gaming_with_header.c
+	<string.h>
+	<stdint.h>
+

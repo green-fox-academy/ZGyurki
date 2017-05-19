@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 // TODO: Include needed header files
-#include "game.h"
 
 int main() {
     // Set the default state of the variable
