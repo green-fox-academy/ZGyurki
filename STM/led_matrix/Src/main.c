@@ -55,7 +55,7 @@
 #include "lwip/tcpip.h"
 #include "app_ethernet.h"
 #include "lcd_log.h"
-#include "led_matrix.h"
+#include "led_matrix.h"			//ide be kell tenni a thread függvényeket
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -139,8 +139,8 @@ static void StartThread(void const * argument)
   osThreadCreate (osThread(LED_MATRIX_UPDATE), NULL);
 
   // Start waterfall thread
-  osThreadDef(LED_MATRIX_WATERFALL, led_matrix_waterfall_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
-  osThreadCreate (osThread(LED_MATRIX_WATERFALL), NULL);
+  //osThreadDef(LED_MATRIX_WATERFALL, led_matrix_waterfall_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);
+  //osThreadCreate (osThread(LED_MATRIX_WATERFALL), NULL);
 
   // Start ADC thread
   osThreadDef(ADC_MEASUREMENT, adc_measurement_thread, osPriorityLow, 0, configMINIMAL_STACK_SIZE * 2);

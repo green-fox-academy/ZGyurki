@@ -201,8 +201,6 @@ static void BSP_Config(void)
   /* Set LCD Foreground Layer  */
   BSP_LCD_SelectLayer(1);
   
-  BSP_LCD_SetFont(120);
-  
   /* Initialize TS */
   BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
 

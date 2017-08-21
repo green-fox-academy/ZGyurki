@@ -1,18 +1,25 @@
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
+
 #include "led_matrix.h"
 #include "stm32f7xx_hal.h"
 #include "lcd_log.h"
 #include "cmsis_os.h"
-#include "stm32f7xx_hal_adc.h"
-#include "stm32f7xx_hal_adc_ex.h"
+#include "stm32f7xx_hal_adc.h"			//ezt be kell tenni az ADC-hez
+#include "stm32f7xx_hal_adc_ex.h"		//ezt be kell tenni az ADC-hez
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
+osMessageQDef(message_q, 5, uint16_t); 	// Declare a message queue
+osMessageQId message_q_id;				// Declare an ID for the message queue
+osEvent evt;
+
 ADC_HandleTypeDef adc_handle;
 ADC_ChannelConfTypeDef adc_ch_conf;
+uint16_t ref;
 
 osStatus status;
 GPIO_InitTypeDef led_matrix;
@@ -24,6 +31,278 @@ typedef struct {
 
 // Each LED state is stored in this 2D array
 GPIO_PinState led_matrix_state[LED_MATRIX_ROWS][LED_MATRIX_COLS];
+
+GPIO_PinState led_matrix_h[14][LED_MATRIX_COLS] = {
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 0, 0, 0, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+};
+
+GPIO_PinState led_matrix_e[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 0, 0, 0},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 0, 0, 0, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 0, 0, 0, 0}
+};
+
+GPIO_PinState led_matrix_d[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 0, 1, 1},
+	{0, 1, 1, 0, 1},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 0, 1},
+	{0, 0, 0, 1, 1}
+};
+
+GPIO_PinState led_matrix_r[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 0, 0, 1},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 0, 0, 0, 1},
+	{0, 1, 0, 1, 1},
+	{0, 1, 1, 0, 1},
+	{0, 1, 1, 1, 0}
+};
+
+GPIO_PinState led_matrix_o[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 0, 1},
+	{1, 1, 0, 1, 1},
+	{1, 0, 0, 0, 1},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{1, 0, 0, 0, 1}
+};
+
+GPIO_PinState led_matrix_i[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1}
+};
+
+GPIO_PinState led_matrix_l[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 0, 0, 0, 0}
+};
+
+GPIO_PinState led_matrix_oo[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 0, 0},
+	{1, 1, 0, 0, 1},
+	{1, 0, 0, 0, 1},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{1, 0, 0, 0, 1}
+};
+
+//
+
+GPIO_PinState led_matrix_empty[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_1[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_2[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 0},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_3[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 0, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 0, 0},
+	{1, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_4[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 0, 0},
+	{1, 1, 0, 1, 0},
+	{1, 0, 1, 1, 0},
+	{1, 0, 0, 0, 0},
+	{1, 1, 1, 1, 0},
+	{1, 1, 1, 1, 0}
+};
+
+GPIO_PinState led_matrix_4_5[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 0, 1},
+	{1, 1, 0, 0, 1},
+	{1, 0, 1, 0, 1},
+	{0, 1, 1, 0, 1},
+	{0, 0, 0, 0, 0},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 1}
+};
+
+GPIO_PinState led_matrix_4_6[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 0, 1, 1},
+	{1, 0, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{0, 0, 0, 0, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_7[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 0, 1, 1, 1},
+	{0, 0, 1, 1, 0},
+	{1, 0, 1, 1, 0},
+	{1, 0, 1, 1, 0},
+	{0, 0, 0, 1, 0},
+	{1, 0, 1, 1, 0},
+	{1, 0, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_4_8[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 0, 1},
+	{0, 1, 1, 0, 1},
+	{0, 1, 1, 0, 1},
+	{0, 0, 1, 0, 1},
+	{0, 1, 1, 0, 1},
+	{0, 1, 1, 1, 0}
+};
+
+GPIO_PinState led_matrix_4_9[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 0, 0},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 1, 0, 0}
+};
+
+GPIO_PinState led_matrix_4_10[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 0, 0, 0},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 1, 0, 0, 0}
+};
+
+GPIO_PinState led_matrix_0[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 0, 0, 0, 1},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{0, 1, 1, 1, 0},
+	{1, 0, 0, 0, 1}
+};
+
+GPIO_PinState led_matrix_0_1[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 0, 1, 1},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 1},
+	{1, 1, 1, 0, 1},
+	{0, 0, 0, 1, 1}
+};
+
+GPIO_PinState led_matrix_0_2[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 1, 1, 1},
+	{1, 1, 0, 1, 0},
+	{1, 1, 0, 1, 0},
+	{1, 1, 0, 1, 0},
+	{1, 1, 0, 1, 0},
+	{1, 1, 0, 1, 0},
+	{0, 0, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_0_3[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 1, 1, 1, 0},
+	{1, 0, 1, 0, 1},
+	{1, 0, 1, 0, 1},
+	{1, 0, 1, 0, 1},
+	{1, 0, 1, 0, 1},
+	{1, 0, 1, 0, 1},
+	{0, 1, 1, 1, 0}
+};
+
+GPIO_PinState led_matrix_0_4[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 0, 0},
+	{0, 1, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{0, 1, 0, 1, 1},
+	{1, 1, 1, 0, 0}
+};
+
+GPIO_PinState led_matrix_0_5[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 0, 1, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{1, 1, 0, 1, 1},
+	{0, 0, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_0_6[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{0, 1, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{1, 0, 1, 1, 1},
+	{0, 1, 1, 1, 1}
+};
+
+GPIO_PinState led_matrix_0_7[LED_MATRIX_ROWS][LED_MATRIX_COLS] = {
+	{1, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{0, 1, 1, 1, 1},
+	{1, 1, 1, 1, 1}
+};
 
 // Mutex definition
 osMutexDef(LED_MATRIX_MUTEX_DEF);
@@ -41,7 +320,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	led_matrix.Pin = GPIO_PIN_0;
 	led_matrix.Speed = GPIO_SPEED_FAST;
-	//led_matrix.Pull = GPIO_NOPULL;
+	led_matrix.Pull = GPIO_NOPULL;
 	led_matrix.Mode = GPIO_MODE_ANALOG;
 	HAL_GPIO_Init(GPIOA, &led_matrix);
 }
@@ -88,6 +367,16 @@ void led_matrix_set(uint8_t row, uint8_t col, uint8_t state) {
 // Write this function!
 void led_matrix_update_thread(void const *argument)
 {
+
+	const void * fourThousand[] = {
+			led_matrix_d,
+			led_matrix_o,
+			led_matrix_r,
+			led_matrix_i
+	};
+
+	int len = sizeof(fourThousand) / sizeof(fourThousand[0]);
+
 	// TODO:
 	// Initialize the pins as outputs and the led_matrix_state 2D array
 	__HAL_RCC_GPIOC_CLK_ENABLE();
@@ -164,10 +453,6 @@ void led_matrix_update_thread(void const *argument)
 		{GPIOH, GPIO_PIN_6},
 	};
 
-	for (int k = 5; k < LED_MATRIX_ROWS + 5; k++) {
-		HAL_GPIO_WritePin(ledblinking[k].pin_letter, ledblinking[k].pin_number, 1);
-	}
-
 	// TODO:
 	// Create a mutex
 	// Use the LED_MATRIX_MUTEX_DEF
@@ -175,44 +460,57 @@ void led_matrix_update_thread(void const *argument)
 
 	LCD_UsrLog("led_matrix - initialized\n");
 
+	//uint8_t changer = 2;
+
 	// Infinite loop
 	while (1) {
 		// TODO:
 		// Implement the led matrix updater functionality
 
-		// Step 1:
-		// Iterate through every column or row
-		for (int i = 0; i < LED_MATRIX_COLS; i++) {
+		//Ez a for ciklus és alatta a memcpy végigiterál azon a tömbön, amiben a '4000 animáció' állapotai vannak
+		//És az épp soron levõt bemásolja a led_matrix_state 2D tömbbe
+		for (int k = 0; k < len; k++) {
 
+			uint16_t a = 0;
+			memcpy(led_matrix_state, fourThousand[k], 1 * sizeof(led_matrix_state));
 
-			// Step 2:
-			// Wait for the mutex
-			osMutexWait(led_matrix_mutex_id, osWaitForever);
+			// Step 1:
+			// Iterate through every column or row
 
-			// Step 3:
-			// Turn on the column or row
-			//led_matrix_set(0, 0, 1);
-			HAL_GPIO_WritePin(ledblinking[i].pin_letter, ledblinking[i].pin_number, 1);
+			while (a != 60) {
 
-			// Step 4:
-			// Turn on the leds in that column or row
-			for (int j = 5; j < LED_MATRIX_ROWS + 5; j++) {
-				HAL_GPIO_WritePin(ledblinking[j].pin_letter, ledblinking[j].pin_number, 0);
-				osDelay(100);
-				HAL_GPIO_WritePin(ledblinking[j].pin_letter, ledblinking[j].pin_number, 1);
+				for (int i = 0; i < LED_MATRIX_COLS; i++) {
+
+					// Step 2:
+					// Wait for the mutex
+					osMutexWait(led_matrix_mutex_id, osWaitForever);
+
+					// Step 3:
+					// Turn on the column or row
+					HAL_GPIO_WritePin(ledblinking[i].pin_letter, ledblinking[i].pin_number, 1);
+
+					// Step 4:
+					// Turn on the leds in that column or row
+
+					for (int j = 5; j < LED_MATRIX_ROWS + 5; j++) {
+						HAL_GPIO_WritePin(ledblinking[j].pin_letter, ledblinking[j].pin_number, led_matrix_state[(j - 5)][i]);
+					}
+
+					// Step 5:
+					// Release the mutex
+					osMutexRelease(led_matrix_mutex_id);
+
+					// Step 6:
+					// Delay
+					osDelay(2);
+
+					// Step 7:
+					// Turn off the column or row
+					HAL_GPIO_WritePin(ledblinking[i].pin_letter, ledblinking[i].pin_number, 0);
+				}
+				a++;
 			}
-
-			// Step 5:
-			// Release the mutex
-			osMutexRelease(led_matrix_mutex_id);
-
-			// Step 6:
-			// Delay
-			osDelay(50);
-
-			// Step 7:
-			// Turn off the column or row
-			HAL_GPIO_WritePin(ledblinking[i].pin_letter, ledblinking[i].pin_number, 0);
+			osDelay(20);
 		}
 	}
 
@@ -226,11 +524,20 @@ void led_matrix_update_thread(void const *argument)
 // This thread is a waterfall type animation
 void led_matrix_waterfall_thread(void const *argument)
 {
-	while (1) {
+	// Ez kipucolja a 2D tömböt, mielött a waterfall megkapná
+	for (uint8_t c = 0; c < LED_MATRIX_COLS; c++) {
 		for (uint8_t r = 0; r < LED_MATRIX_ROWS; r++) {
-			for (uint8_t c = 0; c < LED_MATRIX_COLS; c++) {
+			led_matrix_state[r][c] = 1;
+		}
+	}
+
+	while (1) {
+		for (uint8_t c = 0; c < LED_MATRIX_COLS; c++) {
+			for (uint8_t r = 0; r < LED_MATRIX_ROWS; r++) {
 				led_matrix_set(r, c, 1);
-				osDelay(50);
+				evt = osMessageGet(message_q_id, osWaitForever);
+				uint32_t delay = evt.value.v;
+				osDelay(delay);
 				led_matrix_set(r, c, 0);
 			}
 		}
@@ -244,7 +551,8 @@ void led_matrix_waterfall_thread(void const *argument)
 
 void adc_measurement_thread(void const *argument)
 {
-	//HAL_ADC_MspInit();
+	message_q_id = osMessageCreate(osMessageQ(message_q), NULL);
+	HAL_ADC_MspInit(&adc_handle);
 
 	adc_handle.State = HAL_ADC_STATE_RESET;
 	adc_handle.Instance = ADC3;
@@ -265,12 +573,13 @@ void adc_measurement_thread(void const *argument)
 	HAL_ADC_ConfigChannel(&adc_handle, &adc_ch_conf);
 
 	while (1) {
-		float ref = (float)adc_measure() / 4095 * 4500;
+		ref = adc_measure() / 20;
 		uint8_t buffer[100];
-		sprintf((char*)buffer, "ref   %.f", ref);
-		BSP_LCD_ClearStringLine(6);
-		BSP_LCD_DisplayStringAtLine(6, buffer);
-		HAL_Delay(10);
+		sprintf((char*)buffer, "This is ref's value:   %d", ref);
+		BSP_LCD_ClearStringLine(8);
+		BSP_LCD_DisplayStringAtLine(8, buffer);
+		osMessagePut(message_q_id, ref, osWaitForever);
+		HAL_Delay(50);
 	}
 }
 

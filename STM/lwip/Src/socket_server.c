@@ -29,7 +29,7 @@ void socket_server_thread(void const *argument)
 		struct sockaddr_in address;
 		address.sin_family = AF_INET;
 		address.sin_addr.s_addr = INADDR_ANY;
-		address.sin_port = htons( 12125 );
+		address.sin_port = htons( 8888 );
 		//struct sockaddr *listen_addr = (struct sockaddr *) &address;
 
 		// Bind the listen address to the socket

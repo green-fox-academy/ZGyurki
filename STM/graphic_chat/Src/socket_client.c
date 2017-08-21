@@ -80,7 +80,6 @@ void drawing_stage()
 	BSP_LCD_DisplayStringAt(89, 130, ptr, RIGHT_MODE);
 }
 
-
 // Changing color and sending coordinates!
 int color_change(int s, TS_StateTypeDef touch_scr)
 {
